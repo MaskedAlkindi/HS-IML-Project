@@ -1,7 +1,9 @@
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 # Base URL for the API
-BASE_URL = "http://localhost:9001/api"
+BASE_URL = "https://walrus-app-s7ejr.ondigitalocean.app/api"
 
 # Endpoints
 SIGNUP_ENDPOINT = f"{BASE_URL}/signup"
@@ -10,6 +12,12 @@ CREATE_SCAN_ENDPOINT = f"{BASE_URL}/createscan"
 GET_ALL_SCANS_ENDPOINT = f"{BASE_URL}/getallscans"
 LOGS_ENDPOINT = f"{BASE_URL}/logs"
 TEST_DB_ENDPOINT = f"{BASE_URL}/test-db"
+
+# Create a session with retry strategy
+session = requests.Session()
+retry = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+adapter = HTTPAdapter(max_retries=retry)
+session.mount('https://', adapter)
 
 # Function to sign up a new user
 def signup(username, first_name, last_name, password, user_type):
@@ -20,8 +28,14 @@ def signup(username, first_name, last_name, password, user_type):
         "password": password,
         "type": user_type
     }
-    response = requests.post(SIGNUP_ENDPOINT, json=payload)
-    return response.json()
+    try:
+        response = session.post(SIGNUP_ENDPOINT, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(response.json())
+        print(f"Signup failed: {e}")
+        return {"error": str(e)}
 
 # Function to log in a user and retrieve a token
 def login(username, password):
@@ -29,8 +43,13 @@ def login(username, password):
         "username": username,
         "password": password
     }
-    response = requests.post(LOGIN_ENDPOINT, json=payload)
-    return response.json()
+    try:
+        response = session.post(LOGIN_ENDPOINT, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Login failed: {e}")
+        return {"error": str(e)}
 
 # Function to log out a user (clear token)
 def logout():
@@ -45,29 +64,49 @@ def create_scan(token, file_info, is_malware):
         "file_info": file_info,
         "ismalware": is_malware
     }
-    response = requests.post(CREATE_SCAN_ENDPOINT, headers=headers, json=payload)
-    return response.json()
+    try:
+        response = session.post(CREATE_SCAN_ENDPOINT, headers=headers, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Create scan failed: {e}")
+        return {"error": str(e)}
 
 # Function to get all scans
 def get_all_scans(token):
     headers = {
         "Authorization": f"Bearer {token}"
     }
-    response = requests.get(GET_ALL_SCANS_ENDPOINT, headers=headers)
-    return response.json()
+    try:
+        response = session.get(GET_ALL_SCANS_ENDPOINT, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Get all scans failed: {e}")
+        return {"error": str(e)}
 
 # Function to get logs
 def get_logs(token):
     headers = {
         "Authorization": f"Bearer {token}"
     }
-    response = requests.get(LOGS_ENDPOINT, headers=headers)
-    return response.json()
+    try:
+        response = session.get(LOGS_ENDPOINT, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Get logs failed: {e}")
+        return {"error": str(e)}
 
 # Function to test DB connection
 def test_db():
-    response = requests.get(TEST_DB_ENDPOINT)
-    return response.json()
+    try:
+        response = session.get(TEST_DB_ENDPOINT)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Test DB connection failed: {e}")
+        return {"error": str(e)}
 
 # Example usage
 if __name__ == "__main__":

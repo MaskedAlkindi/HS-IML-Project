@@ -62,7 +62,7 @@ router.post("/signup", async (req, res) => {
 
   try {
     await db.execute("INSERT INTO Users (Username, FirstName, LastName, HashedPassword, Type) VALUES (?, ?, ?, ?, ?)", 
-      [username, firstName, lastName, hashedPassword, type]);
+      [username, firstName, lastName, hashedPassword, "normal user"]);
     await createLog("signup", "User signed up", username);
     res.status(201).json({ message: "User created successfully" });
   } catch (error) {

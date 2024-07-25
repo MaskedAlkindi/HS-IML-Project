@@ -37,10 +37,21 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-const createLog = async (action, details, username) => {
-  await db.execute("INSERT INTO Logs (Action, Details, Username) VALUES (?, ?, ?)", 
-    [action, details, username]);
-};
+router.post("/createLog", authenticateToken, async (req, res) => {
+  const { action, details } = req.body;
+  const { username } = req.user;
+
+  if (!action || !details) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    await createLog(action, details, username);
+    res.status(201).json({ message: "Log created successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating log", error: error.message });
+  }
+});
 
 router.get("/", async (req, res, next) => {
   return res.status(200).json({

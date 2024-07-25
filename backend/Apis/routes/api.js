@@ -52,7 +52,7 @@ router.get("/", async (req, res, next) => {
 
 // Signup Endpoint
 router.post("/signup", async (req, res) => {
-  const { username, firstName, lastName, password, type } = req.body;
+  const { username, firstName, lastName, password} = req.body;
 
   if (!username || !firstName || !lastName || !password || !type) {
     return res.status(400).json({ message: "All fields are required" });
@@ -64,7 +64,9 @@ router.post("/signup", async (req, res) => {
     await db.execute("INSERT INTO Users (Username, FirstName, LastName, HashedPassword, Type) VALUES (?, ?, ?, ?, ?)", 
       [username, firstName, lastName, hashedPassword, "normal user"]);
     await createLog("signup", "User signed up", username);
-    res.status(201).json({ message: "User created successfully" });
+    const token = jwt.sign({ username: user.Username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.status(201).json({ token });
+   
   } catch (error) {
     res.status(500).json({ message: "Error creating user", error: error.message });
   }

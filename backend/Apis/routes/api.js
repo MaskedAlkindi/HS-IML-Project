@@ -47,7 +47,27 @@ router.get("/", async (req, res, next) => {
     title: "Express Testing",
     message: "The app is working properly!",
   });
+
+
 });
+
+router.post("/createLog", authenticateToken, async (req, res) => {
+  const { action, details, username } = req.body;
+
+  if (!action || !details || !username) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    await db.execute("INSERT INTO Logs (Action, Details, Username) VALUES (?, ?, ?)", 
+      [action, details, username]);
+    res.status(201).json({ message: "Log created successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating log", error: error.message });
+  }
+});
+
+
 
 
 // Signup Endpoint

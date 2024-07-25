@@ -37,6 +37,20 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+const createLog = async (action, details, username) => {
+  await db.execute("INSERT INTO Logs (Action, Details, Username) VALUES (?, ?, ?)", 
+    [action, details, username]);
+};
+
+router.get("/", async (req, res, next) => {
+  return res.status(200).json({
+    title: "Express Testing",
+    message: "The app is working properly!",
+  });
+
+
+});
+
 router.post("/createLog", authenticateToken, async (req, res) => {
   const { action, details } = req.body;
   const { username } = req.user;
@@ -52,16 +66,6 @@ router.post("/createLog", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Error creating log", error: error.message });
   }
 });
-
-router.get("/", async (req, res, next) => {
-  return res.status(200).json({
-    title: "Express Testing",
-    message: "The app is working properly!",
-  });
-
-
-});
-
 
 
 

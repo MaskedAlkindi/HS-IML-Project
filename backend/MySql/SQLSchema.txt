@@ -1,0 +1,29 @@
+CREATE DATABASE MalwareDetection;
+
+USE MalwareDetection;
+
+CREATE TABLE Users (
+    Username VARCHAR(50) NOT NULL PRIMARY KEY,
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50),
+    HashedPassword VARCHAR(255),
+    Type ENUM('admin', 'normal user') NOT NULL
+);
+
+CREATE TABLE Scans (
+    ScanID INT AUTO_INCREMENT PRIMARY KEY,
+    TimeStamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    File_info JSON,
+    IsMalware BOOLEAN,
+    Username VARCHAR(50),
+    FOREIGN KEY (Username) REFERENCES Users(Username)
+);
+
+CREATE TABLE Logs (
+    LogID INT AUTO_INCREMENT PRIMARY KEY,
+    TimeStamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Action VARCHAR(255),
+    Details TEXT,
+    Username VARCHAR(50),
+    FOREIGN KEY (Username) REFERENCES Users(Username)
+);

@@ -17,7 +17,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import accuracy_score
-from manage_apis import signup, login, get_logs, get_all_scans, create_log, create_scan
+from manage_apis import signup, login, get_logs, get_all_scans, create_log, create_scan, get_all_bots, get_bot, create_bot, toggle_bot
 
 # Paths for datasets and models
 DATASETS_PATH = '/app/datasets'
@@ -212,20 +212,50 @@ def user_auth():
             else:
                 st.error('Error creating account')
 
-# Define function for Telegram bot setup
 def setup_telegram_bot():
     st.title('Setup Telegram Bot')
+
+    # Fetch existing bots
+    bots_response = get_all_bots(st.session_state.token)
+    if 'error' in bots_response:
+        st.error(bots_response['error'])
+    else:
+        if bots_response:
+            st.subheader("Existing Bots")
+            for bot in bots_response:
+                with st.expander(f"Bot Token: {bot['BotToken']}"):
+                    st.write(f"Passkey: {bot.get('Passkey', 'N/A')}")
+                    st.write(f"Active: {'Yes' if bot.get('IsActive', False) else 'No'}")
+
+    # Add new bot
+    st.subheader("Add New Bot")
     bot_token = st.text_input('Add Bot Token')
     setup_passkey = st.text_input('Setup Passkey')
-    deploy = st.button('Deploy')
-    toggle = st.toggle('Toggle Bot On/Off')
-    
-    if deploy:
-        st.success('Bot deployed successfully!')
-        st.write(f'Bot Token: {bot_token}')
-        st.write(f'Setup Passkey: {setup_passkey}')
-        st.write(f'Bot Status: {"On" if toggle else "Off"}')
-        create_log("Setup Telegram Bot", "Telegram bot setup and deployed.", st.session_state.token)
+    if st.button('Deploy'):
+        response = create_bot(bot_token, setup_passkey, st.session_state.token)
+        if 'message' in response:
+            st.success('Bot deployed successfully!')
+            st.write(f'Bot Token: {bot_token}')
+            st.write(f'Setup Passkey: {setup_passkey}')
+            create_log("Setup Telegram Bot", "Telegram bot setup and deployed.", st.session_state.token)
+        else:
+            st.error('Failed to deploy bot')
+
+    # Option to toggle bot status
+    bot_details = get_bot(st.session_state.token)
+    if 'error' in bot_details:
+        st.error(bot_details['error'])
+    else:
+        is_active = st.checkbox('Toggle Bot On/Off', value=bot_details.get('IsActive', False))
+        if st.button('Update Bot Status'):
+            response = toggle_bot(is_active, st.session_state.token)
+            if 'message' in response:
+                st.success('Bot status updated successfully!')
+                create_log("Toggle Bot", "Bot status updated.", st.session_state.token)
+            else:
+                st.error('Failed to update bot status')
+
+
 
 # Function to display statistics
 def show_statistics():
@@ -475,7 +505,7 @@ else:
             
             prediction, features = predict_malicious(tmp_file_path, selected_model)
             st.success("The file is malicious." if prediction else "The file is not malicious.")
-            create_scan(features, prediction, st.session_state.token)
+            #create_scan(features, prediction, st.session_state.token)
             create_log("Predict Malware", f"Prediction made using model {selected_model}. File is {'malicious' if prediction else 'not malicious'}.", st.session_state.token)
 
     elif choice == 'Upload File':

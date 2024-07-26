@@ -27,3 +27,13 @@ CREATE TABLE Logs (
     Username VARCHAR(50),
     FOREIGN KEY (Username) REFERENCES Users(Username)
 );
+
+
+CREATE TABLE Bots (
+    BotID INT AUTO_INCREMENT PRIMARY KEY,
+    Username VARCHAR(50),
+    BotToken VARCHAR(255),
+    Passkey VARCHAR(255),
+    IsActive BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (Username) REFERENCES Users(Username)
+);

@@ -152,6 +152,66 @@ router.get("/logs", authenticateToken, async (req, res) => {
   res.json(rows);
 });
 
+
+router.post("/createbot", authenticateToken, async (req, res) => {
+  const { bot_token, passkey } = req.body;
+  const { username } = req.user;
+
+  if (!bot_token || !passkey) {
+    return res.status(400).json({ message: "Bot token and passkey are required" });
+  }
+
+  try {
+    await db.execute("INSERT INTO Bots (Username, BotToken, Passkey) VALUES (?, ?, ?)", 
+      [username, bot_token, passkey]);
+    await createLog("create bot", "User created a bot", username);
+    res.status(201).json({ message: "Bot created successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating bot", error: error.message });
+  }
+});
+
+router.get("/getbot", authenticateToken, async (req, res) => {
+  const { username } = req.user;
+
+  try {
+    const [rows] = await db.execute("SELECT * FROM Bots WHERE Username = ?", [username]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No bot found for the user" });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving bot", error: error.message });
+  }
+});
+
+router.post("/togglebot", authenticateToken, async (req, res) => {
+  const { is_active } = req.body;
+  const { username } = req.user;
+
+  try {
+    await db.execute("UPDATE Bots SET IsActive = ? WHERE Username = ?", [is_active, username]);
+    await createLog("toggle bot", `User toggled bot to ${is_active}`, username);
+    res.status(200).json({ message: "Bot status updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating bot status", error: error.message });
+  }
+});
+
+router.get("/getallbots", async (req, res) => {
+  try {
+    const [rows] = await db.execute("SELECT BotToken FROM Bots WHERE IsActive = 1");
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving bots", error: error.message });
+  }
+});
+
+
+
+
+
+
 router.get("/test-db", async (req, res) => {
   try {
     await db.query("SELECT 1");

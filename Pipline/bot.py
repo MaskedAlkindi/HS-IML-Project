@@ -14,11 +14,17 @@ API_URL = os.getenv('API_URL', 'https://walrus-app-s7ejr.ondigitalocean.app/bot'
 
 def get_logs_from_api(passkey):
     headers = {'Authorization': f'Bearer {passkey}'}
-    response = requests.get(f'{API_URL}/logs', headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {'error': 'Failed to fetch logs'}
+    logger.info(f"Fetching logs with headers: {headers}")
+    try:
+        response = requests.get(f'{API_URL}/logs', headers=headers)
+        logger.info(f"API Response: {response.status_code} - {response.text}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {'error': f'Failed to fetch logs: {response.status_code} - {response.text}'}
+    except Exception as e:
+        logger.error(f"Exception occurred: {e}")
+        return {'error': f'Exception occurred: {str(e)}'}
 
 def showlogs(update: Update, context: CallbackContext) -> None:
     passkey = context.args[0] if context.args else None
@@ -41,11 +47,16 @@ def run_bot(bot_token):
     updater.idle()
 
 def fetch_bot_tokens():
-    response = requests.get(f'{API_URL}/getallbots')
-    if response.status_code == 200:
-        return response.json()
-    else:
-        logger.error('Failed to fetch bot tokens')
+    try:
+        response = requests.get(f'{API_URL}/getallbots')
+        logger.info(f"API Response: {response.status_code} - {response.text}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.error(f"Failed to fetch bot tokens: {response.status_code} - {response.text}")
+            return []
+    except Exception as e:
+        logger.error(f"Exception occurred while fetching bot tokens: {e}")
         return []
 
 def main():

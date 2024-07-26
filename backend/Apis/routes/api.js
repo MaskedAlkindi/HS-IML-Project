@@ -229,6 +229,7 @@
 
 // module.exports = router;
 
+
 const express = require("express");
 const mysql = require("mysql2/promise");
 const jwt = require("jsonwebtoken");
@@ -238,9 +239,6 @@ const dotenv = require("dotenv");
 const fs = require("fs");
 
 dotenv.config();
-
-const app = express();
-app.use(bodyParser.json());
 
 const db = mysql.createPool({
   host: process.env.DB_HOST,
@@ -296,6 +294,7 @@ router.post("/createLog", authenticateToken, async (req, res) => {
   }
 });
 
+// Signup Endpoint
 router.post("/signup", async (req, res) => {
   const { username, firstName, lastName, password, type } = req.body;
 
@@ -309,14 +308,14 @@ router.post("/signup", async (req, res) => {
     await db.execute("INSERT INTO Users (Username, FirstName, LastName, HashedPassword, Type) VALUES (?, ?, ?, ?, ?)", 
       [username, firstName, lastName, hashedPassword, type]);
     await createLog("signup", "User signed up", username);
-    const token = jwt.sign({ username: user.Username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(201).json({ token });
-   
   } catch (error) {
     res.status(500).json({ message: "Error creating user", error: error.message });
   }
 });
 
+// Login Endpoint
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const [rows] = await db.execute("SELECT * FROM Users WHERE Username = ?", [username]);
@@ -421,9 +420,9 @@ router.post("/togglebot", authenticateToken, async (req, res) => {
   }
 });
 
-router.get("/getallbots", authenticateToken, async (req, res) => {
+router.get("/getallbots", async (req, res) => {
   try {
-    const [rows] = await db.execute("SELECT * FROM Bots");
+    const [rows] = await db.execute("SELECT BotToken FROM Bots WHERE IsActive = 1");
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: "Error retrieving bots", error: error.message });
@@ -442,13 +441,6 @@ router.get("/test-db", async (req, res) => {
       error: error.message
     });
   }
-});
-
-app.use("/api", router);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
 });
 
 module.exports = router;

@@ -3,6 +3,7 @@ const mysql = require("mysql2/promise");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const fs = require("fs");
+const jwt = require("jsonwebtoken");
 
 dotenv.config();
 
@@ -34,6 +35,23 @@ const authenticatePasskey = async (req, res, next) => {
   next();
 };
 
+const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
+    if (err) return res.sendStatus(403);
+
+    const [rows] = await db.execute("SELECT * FROM Users WHERE Username = ?", [user.username]);
+    if (rows.length === 0) return res.sendStatus(403);
+
+    req.user = rows[0];
+    next();
+  });
+};
+
 botRouter.get("/logs", authenticatePasskey, async (req, res) => {
   const { bot } = req;
 
@@ -42,7 +60,7 @@ botRouter.get("/logs", authenticatePasskey, async (req, res) => {
   res.json(rows);
 });
 
-botRouter.get("/getallbots", async (req, res) => {
+botRouter.get("/getallbots", authenticatePasskey, async (req, res) => {
   try {
     const [rows] = await db.execute("SELECT BotToken FROM Bots WHERE IsActive = 1");
     res.json(rows);

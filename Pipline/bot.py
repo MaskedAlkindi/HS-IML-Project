@@ -10,7 +10,7 @@ import time
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-API_URL = os.getenv('API_URL', 'https://walrus-app-s7ejr.ondigitalocean.app/api')
+API_URL = os.getenv('API_URL', 'https://walrus-app-s7ejr.ondigitalocean.app/bot')
 
 def get_logs_from_api(passkey):
     headers = {'Authorization': f'Bearer {passkey}'}

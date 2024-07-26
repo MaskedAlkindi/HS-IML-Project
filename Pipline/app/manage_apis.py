@@ -2,6 +2,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import numpy as np
+from requests.exceptions import RequestException
 
 # Base URL for the API
 BASE_URL = "https://walrus-app-s7ejr.ondigitalocean.app/api"
@@ -14,8 +15,6 @@ GET_ALL_SCANS_ENDPOINT = f"{BASE_URL}/getallscans"
 LOGS_ENDPOINT = f"{BASE_URL}/logs"
 TEST_DB_ENDPOINT = f"{BASE_URL}/test-db"
 CREATE_LOG_ENDPOINT = f"{BASE_URL}/createLog"
-
-# New Endpoints
 CREATE_BOT_ENDPOINT = f"{BASE_URL}/createbot"
 GET_BOT_ENDPOINT = f"{BASE_URL}/getbot"
 TOGGLE_BOT_ENDPOINT = f"{BASE_URL}/togglebot"
@@ -42,8 +41,7 @@ def signup(username, first_name, last_name, password, user_type):
         response = session.post(SIGNUP_ENDPOINT, json=payload)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
-        print(response.json())
+    except RequestException as e:
         print(f"Signup failed: {e}")
         return {"error": str(e)}
 
@@ -60,7 +58,7 @@ def login(username, password):
         result = response.json()
         token = result.get("token")  # Store the token in the global variable
         return result
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         print(f"Login failed: {e}")
         return {"error": str(e)}
 
@@ -69,10 +67,6 @@ def logout():
     global token
     token = None  # Clear the token
     return {"message": "Logged out successfully"}
-
-
-
-
 
 # Function to create a bot
 def create_bot(bot_token, passkey, token):
@@ -123,8 +117,6 @@ def toggle_bot(is_active, token):
     except RequestException as e:
         return {"error": str(e)}
 
-
-
 # Function to get all bots
 def get_all_bots(token):
     if not token:
@@ -136,14 +128,10 @@ def get_all_bots(token):
         response = session.get(f"{BASE_URL}/getallbots", headers=headers)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         print(f"Get all bots failed: {e}")
         return {"error": str(e)}
 
-
-
-
-# Function to create a scan
 # Function to create a scan
 def create_scan(file_info, is_malware, token):
     if not token:
@@ -168,11 +156,9 @@ def create_scan(file_info, is_malware, token):
         response = session.post(CREATE_SCAN_ENDPOINT, headers=headers, json=payload)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         print(f"Create scan failed: {e}")
         return {"error": str(e)}
-
-
 
 # Function to get all scans
 def get_all_scans(token):
@@ -185,7 +171,7 @@ def get_all_scans(token):
         response = session.get(GET_ALL_SCANS_ENDPOINT, headers=headers)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         print(f"Get all scans failed: {e}")
         return {"error": str(e)}
 
@@ -200,7 +186,7 @@ def get_logs(token):
         response = session.get(LOGS_ENDPOINT, headers=headers)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         print(f"Get logs failed: {e}")
         return {"error": str(e)}
 
@@ -220,7 +206,7 @@ def create_log(action, details, token):
         response = session.post(CREATE_LOG_ENDPOINT, headers=headers, json=payload)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         print(f"Create log failed: {e}")
         return {"error": str(e)}
 
@@ -230,6 +216,6 @@ def test_db():
         response = session.get(TEST_DB_ENDPOINT)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         print(f"Test DB connection failed: {e}")
         return {"error": str(e)}

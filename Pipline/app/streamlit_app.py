@@ -257,6 +257,7 @@ def setup_telegram_bot():
 
 
 
+
 # Function to display statistics
 def show_statistics():
     st.title('Statistics')

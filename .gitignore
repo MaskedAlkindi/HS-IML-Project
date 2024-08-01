@@ -1,7 +1,7 @@
 
-Model/experiments/Testers/Discord.exe
-Model/experiments/TestingModel.ipynb
-/Streamlit
+Model Experiments/experiments/Testers/Discord.exe
+Model Experiments/experiments/TestingModel.ipynb
+
 
 /backend/Apis/.env
 /backend/Apis/node_modules
